@@ -194,7 +194,10 @@ function renderMeta(info, streams, srcUrl){
     streams.forEach((s,i)=>{
       const q = s.audio_url ? 'Video + getrennte Tonspur' : 'Video (Ton inkl.)';
       const pill = s.stream_type==='live'?'<span class="pill live">Live</span>':'<span class="pill vod">VOD</span>';
-      const payload = encodeURIComponent(JSON.stringify({video_url:s.url,audio_url:s.audio_url,name:s.name,source_url:srcUrl}));
+      // encodeURIComponent leaves apostrophes untouched; they would break the
+      // single-quoted JS string in the inline onclick (common in ARTE titles),
+      // so encode them explicitly.
+      const payload = encodeURIComponent(JSON.stringify({video_url:s.url,audio_url:s.audio_url,name:s.name,source_url:srcUrl})).replace(/'/g,'%27');
       html += `<div class="stream"><div class="info">
           <div class="nm">${esc(s.name)} ${pill}</div>
           <div class="det">🎬 Beste Qualität · ${q}</div>
