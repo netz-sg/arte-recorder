@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARTE Recorder</title>
+<style>
+  :root{
+    --bg:#0d0f12; --bg-2:#15181d; --card:#171a20; --card-2:#1d212a;
+    --border:#272c36; --text:#e8eaee; --muted:#9aa3b2; --muted-2:#6b7280;
+    --accent:#ff5b4a; --accent-2:#ff7a5c; --accent-dim:rgba(255,91,74,.14);
+    --green:#46d39a; --amber:#f2c14e; --red:#ff5d5d; --radius:14px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       background:radial-gradient(1200px 600px at 70% -10%,#1a1d24 0,var(--bg) 55%);color:var(--text);min-height:100vh}
+  a{color:var(--accent-2);text-decoration:none}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px 80px}
+  header{display:flex;align-items:center;justify-content:space-between;padding:22px 0 26px}
+  .brand{display:flex;align-items:center;gap:12px;font-weight:700;font-size:20px;letter-spacing:.2px}
+  .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+        display:grid;place-items:center;font-weight:800;color:#1a0d0a;font-size:15px}
+  .tag{font-size:12px;color:var(--muted);background:var(--bg-2);border:1px solid var(--border);
+       padding:5px 11px;border-radius:999px}
+  .tabs{display:flex;gap:6px;margin-bottom:22px;border-bottom:1px solid var(--border)}
+  .tab{padding:11px 16px;cursor:pointer;color:var(--muted);font-weight:600;font-size:14px;
+       border-bottom:2px solid transparent;margin-bottom:-1px}
+  .tab.active{color:var(--text);border-bottom-color:var(--accent)}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:18px}
+  .card h2{margin:0 0 4px;font-size:16px}
+  .card .sub{color:var(--muted);font-size:13px;margin:0 0 18px}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  input[type=text],input[type=url]{flex:1;min-width:200px;background:var(--bg-2);border:1px solid var(--border);
+       color:var(--text);padding:13px 15px;border-radius:11px;font-size:14px;outline:none}
+  input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+  button{cursor:pointer;border:none;border-radius:11px;font-weight:600;font-size:14px;padding:13px 18px;
+       transition:.15s;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+  .btn{background:var(--accent);color:#1a0d0a}
+  .btn:hover{background:var(--accent-2)}
+  .btn-ghost{background:var(--card-2);color:var(--text);border:1px solid var(--border)}
+  .btn-ghost:hover{border-color:var(--muted-2)}
+  .btn-sm{padding:8px 13px;font-size:13px;border-radius:9px}
+  .btn-red{background:transparent;color:var(--red);border:1px solid #4a2630}
+  .btn-red:hover{background:#2a161b}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .meta{display:flex;gap:18px;align-items:flex-start;margin-top:4px}
+  .meta img{width:200px;border-radius:10px;border:1px solid var(--border)}
+  .meta .title{font-size:18px;font-weight:700}
+  .meta .subtitle{color:var(--accent-2);font-weight:600;margin:4px 0}
+  .meta .desc{color:var(--muted);font-size:13px;line-height:1.55;margin-top:8px}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.5px}
+  .pill.live{background:rgba(255,93,93,.16);color:#ff8585}
+  .pill.vod{background:rgba(70,211,154,.14);color:var(--green)}
+  .stream{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--card-2);
+       border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:10px}
+  .stream .info{min-width:0}
+  .stream .nm{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .stream .det{color:var(--muted-2);font-size:12px;margin-top:3px}
+  .empty{color:var(--muted);text-align:center;padding:38px 10px;font-size:14px}
+  .job{background:var(--card-2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-top:10px}
+  .job .top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .job .nm{font-weight:600;font-size:14px}
+  .job .msg{color:var(--muted);font-size:12.5px;margin-top:6px}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:7px}
+  .s-running{color:#ff8585}.s-running .dot{background:var(--red);animation:pulse 1.4s infinite}
+  .s-completed{color:var(--green)}.s-completed .dot{background:var(--green)}
+  .s-stopped{color:var(--amber)}.s-stopped .dot{background:var(--amber)}
+  .s-failed{color:#ff7a7a}.s-failed .dot{background:#ff7a7a}
+  .s-starting{color:var(--muted)}.s-starting .dot{background:var(--muted)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .arch{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+  .file{background:var(--card-2);border:1px solid var(--border);border-radius:12px;padding:15px}
+  .file .fn{font-weight:600;font-size:13.5px;word-break:break-all}
+  .file .fm{color:var(--muted-2);font-size:12px;margin:6px 0 12px}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--card-2);
+       border:1px solid var(--border);padding:13px 20px;border-radius:11px;font-size:14px;
+       opacity:0;pointer-events:none;transition:.25s;z-index:50}
+  .toast.show{opacity:1}
+  .toast.err{border-color:#4a2630;color:#ff8585}
+  .hidden{display:none}
+  .spin{width:16px;height:16px;border:2px solid var(--muted-2);border-top-color:transparent;border-radius:50%;
+       display:inline-block;animation:rot .7s linear infinite}
+  @keyframes rot{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><span class="logo">AR</span> ARTE Recorder</div>
+    <span class="tag" id="tgTag">●</span>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="dash" onclick="switchTab('dash')">Dashboard</div>
+    <div class="tab" data-tab="arch" onclick="switchTab('arch')">Archiv</div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <section id="dash">
+    <div class="card">
+      <h2>ARTE-Stream aufnehmen</h2>
+      <p class="sub">Füge eine arte.tv-Video-URL ein (oder einen direkten .m3u8-Master). Immer beste Qualität, mit Ton.</p>
+      <div class="row">
+        <input type="url" id="url" placeholder="https://www.arte.tv/de/videos/..." value="{{ default_url }}">
+        <button class="btn" id="discBtn" onclick="discover()">Stream finden</button>
+      </div>
+    </div>
+
+    <div class="card hidden" id="metaCard"></div>
+
+    <div class="card">
+      <h2>Aktive Jobs</h2>
+      <p class="sub">Aufnahmen &amp; Downloads laufen im Hintergrund weiter – auch wenn du den Tab schließt.</p>
+      <div id="jobs"><div class="empty">Noch keine Jobs.</div></div>
+    </div>
+  </section>
+
+  <!-- ARCHIVE -->
+  <section id="arch" class="hidden">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><h2 style="margin:0">Archiv</h2><p class="sub" style="margin:4px 0 0">Fertige Aufnahmen &amp; Downloads</p></div>
+        <button class="btn-ghost btn-sm" onclick="loadArchive()">Aktualisieren</button>
+      </div>
+      <div id="archive" style="margin-top:18px"><div class="empty">Lädt…</div></div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+let toastTimer;
+function toast(msg, err=false){
+  const t = $('#toast'); t.textContent = msg; t.className = 'toast show' + (err?' err':'');
+  clearTimeout(toastTimer); toastTimer = setTimeout(()=>t.className='toast',3200);
+}
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
+  $('#dash').classList.toggle('hidden',name!=='dash');
+  $('#arch').classList.toggle('hidden',name!=='arch');
+  if(name==='arch') loadArchive();
+}
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+async function discover(){
+  const url = $('#url').value.trim();
+  if(!url){toast('Bitte URL eingeben',true);return;}
+  const btn = $('#discBtn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Suche…';
+  try{
+    const r = await fetch('/api/discover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+    const d = await r.json();
+    if(!r.ok){toast(d.error||'Fehler',true);renderMeta(d.info,[],url);return;}
+    renderMeta(d.info, d.streams, url);
+    fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({page_url:url})});
+  }catch(e){toast('Netzwerkfehler',true);}
+  finally{btn.disabled=false;btn.textContent='Stream finden';}
+}
+
+function renderMeta(info, streams, srcUrl){
+  info = info||{};
+  const c = $('#metaCard'); c.classList.remove('hidden');
+  const img = (info.images&&info.images[0]&&info.images[0].url) ? '' : '';
+  const livePill = info.live ? '<span class="pill live">Live</span>' : '<span class="pill vod">VOD</span>';
+  let html = `<div class="meta">
+    <div style="flex:1">
+      <div class="title">${esc(info.title||'ARTE Stream')} ${info.title?livePill:''}</div>
+      ${info.subtitle?`<div class="subtitle">${esc(info.subtitle)}</div>`:''}
+      ${info.rights_begin?`<div class="det" style="color:var(--muted);font-size:12.5px;margin-top:6px">🕒 ${esc(fmt(info.rights_begin))} – ${esc(fmt(info.rights_end))}</div>`:''}
+      ${info.description?`<div class="desc">${esc(info.description)}</div>`:''}
+    </div></div>
+    <div style="margin-top:18px">`;
+  if(!streams.length){
+    html += `<div class="empty">Kein abspielbarer Stream gefunden.</div>`;
+  }else{
+    streams.forEach((s,i)=>{
+      const q = s.audio_url ? 'Video + getrennte Tonspur' : 'Video (Ton inkl.)';
+      const pill = s.stream_type==='live'?'<span class="pill live">Live</span>':'<span class="pill vod">VOD</span>';
+      const payload = encodeURIComponent(JSON.stringify({video_url:s.url,audio_url:s.audio_url,name:s.name,source_url:srcUrl}));
+      html += `<div class="stream"><div class="info">
+          <div class="nm">${esc(s.name)} ${pill}</div>
+          <div class="det">🎬 Beste Qualität · ${q}</div>
+        </div><div class="row" style="flex-wrap:nowrap">
+          ${s.stream_type==='live'
+            ? `<button class="btn btn-sm" onclick="startJob('record','${payload}',this)">● Aufnehmen</button>`
+            : `<button class="btn btn-sm" onclick="startJob('download','${payload}',this)">↓ Download</button>
+               <button class="btn-ghost btn-sm" onclick="startJob('record','${payload}',this)">● Aufnehmen</button>`}
+        </div></div>`;
+    });
+  }
+  html += '</div>';
+  c.innerHTML = html;
+}
+function fmt(iso){try{return new Date(iso).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}catch(e){return iso;}}
+
+async function startJob(type, payloadEnc, btn){
+  const payload = JSON.parse(decodeURIComponent(payloadEnc));
+  btn.disabled=true; const old=btn.textContent; btn.innerHTML='<span class="spin"></span>';
+  try{
+    const r = await fetch('/api/'+type,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const d = await r.json();
+    if(!r.ok){toast(d.error||'Fehler',true);}
+    else{toast(type==='record'?'Aufnahme gestartet':'Download gestartet');refreshJobs();}
+  }catch(e){toast('Netzwerkfehler',true);}
+  finally{btn.disabled=false;btn.textContent=old;}
+}
+
+async function refreshJobs(){
+  try{
+    const r = await fetch('/api/jobs'); const list = await r.json();
+    const el = $('#jobs');
+    if(!list.length){el.innerHTML='<div class="empty">Noch keine Jobs.</div>';return;}
+    el.innerHTML = list.map(j=>{
+      const cls = 's-'+j.status;
+      const label = {starting:'Startet',running:'Läuft',completed:'Fertig',stopped:'Gestoppt',failed:'Fehler'}[j.status]||j.status;
+      const p = j.progress||{};
+      const prog = (j.status==='running' && (p.time||p.size)) ? ` · ${p.time||''} ${p.size?('· '+p.size):''} ${p.speed?('· '+p.speed):''}` : '';
+      const stop = (j.status==='running'||j.status==='starting')
+        ? `<button class="btn-red btn-sm" onclick="stopJob('${j.id}')">Stopp</button>` : '';
+      const dl = j.output_file ? `<a class="btn-ghost btn-sm" href="/download/${encodeURIComponent(j.output_file)}">↓ Datei</a>` : '';
+      return `<div class="job"><div class="top">
+          <div><span class="${cls}"><span class="dot"></span>${label}</span>
+            <span class="nm" style="margin-left:8px">${esc(j.name)}</span>
+            <span class="det" style="color:var(--muted-2);font-size:12px"> · ${j.type==='record'?'Aufnahme':'Download'}</span></div>
+          <div class="row" style="flex-wrap:nowrap">${dl}${stop}</div>
+        </div><div class="msg">${esc(j.message||'')}${prog}</div></div>`;
+    }).join('');
+  }catch(e){}
+}
+async function stopJob(id){
+  await fetch('/api/jobs/'+id+'/stop',{method:'POST'}); toast('Stoppe…'); refreshJobs();
+}
+
+async function loadArchive(){
+  const el = $('#archive'); el.innerHTML='<div class="empty">Lädt…</div>';
+  try{
+    const r = await fetch('/api/archive'); const list = await r.json();
+    if(!list.length){el.innerHTML='<div class="empty">Noch keine Aufnahmen.</div>';return;}
+    el.innerHTML = '<div class="arch">'+list.map(f=>`
+      <div class="file"><div class="fn">${esc(f.filename)}</div>
+        <div class="fm">${esc(f.size_human)} · ${esc(fmt(f.modified))}</div>
+        <div class="row" style="flex-wrap:nowrap">
+          <a class="btn btn-sm" href="/download/${encodeURIComponent(f.filename)}">↓ Download</a>
+          <button class="btn-red btn-sm" onclick="delFile('${esc(f.filename)}')">Löschen</button>
+        </div></div>`).join('')+'</div>';
+  }catch(e){el.innerHTML='<div class="empty">Fehler beim Laden.</div>';}
+}
+async function delFile(name){
+  if(!confirm('Datei löschen?\n'+name))return;
+  await fetch('/api/archive/'+encodeURIComponent(name),{method:'DELETE'}); loadArchive();
+}
+
+fetch('/api/config').then(r=>r.json()).then(c=>{
+  $('#tgTag').textContent = c.telegram_enabled ? '● Telegram aktiv' : '○ Telegram aus';
+  $('#tgTag').style.color = c.telegram_enabled ? 'var(--green)' : 'var(--muted-2)';
+});
+refreshJobs(); setInterval(refreshJobs,2000);
+</script>
+</body>
+</html>

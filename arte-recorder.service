@@ -1,0 +1,14 @@
+[Unit]
+Description=ARTE Recorder Web UI
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/arte-recorder
+ExecStart=/opt/arte-recorder/venv/bin/python3 webui.py --host 0.0.0.0 --port 5050
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

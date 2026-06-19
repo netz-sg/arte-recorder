@@ -1,0 +1,25 @@
+{
+  "output_dir": "./recordings",
+  "metadata_dir": "./metadata",
+  "temp_dir": "./temp",
+  "page_url": "https://www.arte.tv/de/videos/132146-001-A/southside-festival-2026/",
+  "check_interval_seconds": 60,
+  "record_quality": "best",
+  "record_format": "mp4",
+  "reconnect_delay_seconds": 10,
+  "max_reconnects": 100,
+  "record_max_outage_seconds": 600,
+  "ffmpeg_extra_args": [
+    "-reconnect", "1",
+    "-reconnect_streamed", "1",
+    "-reconnect_delay_max", "10",
+    "-timeout", "30000000",
+    "-fflags", "+discardcorrupt"
+  ],
+  "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "telegram": {
+    "bot_token": "",
+    "chat_id": "",
+    "thread_id": ""
+  }
+}

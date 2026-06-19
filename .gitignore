@@ -1,0 +1,49 @@
+# Secrets & local config (NEVER commit — contains tokens/credentials)
+config.json
+secrets/
+*.token
+*.pem
+client_secrets.json
+
+# Editor/agent local settings
+.claude/
+
+# Vendored binaries
+bin/
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Recordings and metadata (user data)
+recordings/
+metadata/
+temp/
+
+# Local database (scheduled recordings, persisted state)
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs and PID files
+*.log
+*.pid
+webui.pid
+recorder.pid
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
