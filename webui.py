@@ -9,6 +9,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import signal
 import subprocess
 import threading
@@ -156,7 +157,16 @@ def _finalize(parts: List[Path], out_path: Path, job: Job) -> Optional[Path]:
     return parts[0]
 
 
+def _ffmpeg_missing() -> bool:
+    return shutil.which("ffmpeg") is None
+
+
 def _run_download(job: Job):
+    if _ffmpeg_missing():
+        job.status = "failed"
+        job.message = "ffmpeg nicht gefunden – bitte ffmpeg installieren und im PATH bereitstellen"
+        telegram.notify_job_completed("download", job.name, None, job.message)
+        return
     job.status = "running"
     job.started_at = datetime.now(timezone.utc).isoformat()
     telegram.notify_job_started("download", job.name, job.video_url)
@@ -195,6 +205,11 @@ def _run_download(job: Job):
 
 def _run_record(job: Job):
     """Record a live stream into part files, reconnecting until stopped."""
+    if _ffmpeg_missing():
+        job.status = "failed"
+        job.message = "ffmpeg nicht gefunden – bitte ffmpeg installieren und im PATH bereitstellen"
+        telegram.notify_job_completed("record", job.name, None, job.message)
+        return
     job.status = "running"
     job.started_at = datetime.now(timezone.utc).isoformat()
     telegram.notify_job_started("record", job.name, job.video_url)
