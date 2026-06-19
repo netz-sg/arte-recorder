@@ -78,6 +78,11 @@
   .toast.show{opacity:1}
   .toast.err{border-color:#4a2630;color:#ff8585}
   .hidden{display:none}
+  .preview-bar{display:flex;align-items:center;gap:10px;margin:18px 0 0;flex-wrap:wrap}
+  .preview-wrap{position:relative;margin-top:12px}
+  video#preview{width:100%;border-radius:12px;background:#000;aspect-ratio:16/9;display:block}
+  .prev-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:10px;
+       text-align:center;background:rgba(13,15,18,.78);border-radius:12px;color:var(--muted);font-size:14px;padding:20px}
   .spin{width:16px;height:16px;border:2px solid var(--muted-2);border-top-color:transparent;border-radius:50%;
        display:inline-block;animation:rot .7s linear infinite}
   @keyframes rot{to{transform:rotate(360deg)}}
@@ -128,6 +133,7 @@
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
 <script>
 const $ = s => document.querySelector(s);
 let toastTimer;
@@ -146,6 +152,7 @@ function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>'
 async function discover(){
   const url = $('#url').value.trim();
   if(!url){toast('Bitte URL eingeben',true);return;}
+  stopPreview();
   const btn = $('#discBtn'); btn.disabled=true; btn.innerHTML='<span class="spin"></span> Suche…';
   try{
     const r = await fetch('/api/discover',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
@@ -168,8 +175,19 @@ function renderMeta(info, streams, srcUrl){
       ${info.subtitle?`<div class="subtitle">${esc(info.subtitle)}</div>`:''}
       ${info.rights_begin?`<div class="det" style="color:var(--muted);font-size:12.5px;margin-top:6px">🕒 ${esc(fmt(info.rights_begin))} – ${esc(fmt(info.rights_end))}</div>`:''}
       ${info.description?`<div class="desc">${esc(info.description)}</div>`:''}
-    </div></div>
-    <div style="margin-top:18px">`;
+    </div></div>`;
+  const primary = streams[0];
+  if(primary && primary.master_url){
+    html += `<div class="preview-bar">
+        <button class="btn-ghost btn-sm" id="prevBtn" onclick="togglePreview('${encodeURIComponent(primary.master_url)}')">▶ Live-Vorschau</button>
+        <span class="det" style="color:var(--muted-2);font-size:12px">zeigt den Live-Quellstream – genau das, was aufgenommen wird</span>
+      </div>
+      <div id="previewWrap" class="preview-wrap hidden">
+        <video id="preview" controls muted playsinline></video>
+        <div id="previewMsg" class="prev-msg hidden"></div>
+      </div>`;
+  }
+  html += `<div style="margin-top:18px">`;
   if(!streams.length){
     html += `<div class="empty">Kein abspielbarer Stream gefunden.</div>`;
   }else{
@@ -248,6 +266,42 @@ async function loadArchive(){
 async function delFile(name){
   if(!confirm('Datei löschen?\n'+name))return;
   await fetch('/api/archive/'+encodeURIComponent(name),{method:'DELETE'}); loadArchive();
+}
+
+// --- live preview (hls.js) ---
+let hls=null, prevRetry=null;
+function setPrevMsg(t){const m=$('#previewMsg');if(!m)return;if(t){m.innerHTML=t;m.classList.remove('hidden');}else{m.classList.add('hidden');}}
+function togglePreview(encUrl){
+  const wrap=$('#previewWrap'), btn=$('#prevBtn');
+  if(wrap && !wrap.classList.contains('hidden')){stopPreview();btn.textContent='▶ Live-Vorschau';return;}
+  if(wrap) wrap.classList.remove('hidden');
+  if(btn) btn.textContent='■ Vorschau ausblenden';
+  startPreview(decodeURIComponent(encUrl));
+}
+function startPreview(url){
+  const video=$('#preview'); if(!video)return;
+  clearTimeout(prevRetry);
+  if(hls){try{hls.destroy();}catch(e){}hls=null;}
+  setPrevMsg('<span class="spin"></span> Lade Vorschau…');
+  const onLive=()=>{setPrevMsg('');video.play().catch(()=>{});};
+  const onFail=()=>{setPrevMsg('Stream noch nicht live – neuer Versuch in 10&nbsp;s…');
+    clearTimeout(prevRetry);prevRetry=setTimeout(()=>startPreview(url),10000);};
+  if(window.Hls && Hls.isSupported()){
+    hls=new Hls({liveSyncDurationCount:3,manifestLoadingMaxRetry:1});
+    hls.loadSource(url); hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_PARSED,onLive);
+    hls.on(Hls.Events.ERROR,(e,d)=>{if(d&&d.fatal)onFail();});
+  }else if(video.canPlayType('application/vnd.apple.mpegurl')){
+    video.src=url;
+    video.addEventListener('loadedmetadata',onLive,{once:true});
+    video.addEventListener('error',onFail,{once:true});
+  }else{setPrevMsg('Dein Browser unterstützt kein HLS.');}
+}
+function stopPreview(){
+  clearTimeout(prevRetry); prevRetry=null;
+  if(hls){try{hls.destroy();}catch(e){}hls=null;}
+  const video=$('#preview'); if(video){try{video.pause();video.removeAttribute('src');video.load();}catch(e){}}
+  const wrap=$('#previewWrap'); if(wrap)wrap.classList.add('hidden');
 }
 
 fetch('/api/config').then(r=>r.json()).then(c=>{

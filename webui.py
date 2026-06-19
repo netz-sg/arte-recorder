@@ -273,7 +273,7 @@ def _resolve_target(url: str):
         finder = ArteStreamFinder(url, UA)
         video, audio = finder.resolve_master_va(url)
         return ({}, [{"name": "ARTE Stream", "url": video, "audio_url": audio,
-                      "stream_type": "live", "quality": "best"}])
+                      "stream_type": "live", "quality": "best", "master_url": url}])
     finder = ArteStreamFinder(url, UA)
     streams = [asdict(s) for s in finder.discover() if s.url]
     info = ArteMetadata(url, UA).extract_page_info()

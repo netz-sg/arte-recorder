@@ -54,6 +54,9 @@ class StreamInfo:
     # ARTE delivers audio as a separate EXT-X-MEDIA rendition, so ffmpeg needs
     # video + audio as two synchronized inputs to produce a file with sound.
     audio_url: Optional[str] = None
+    # Original HLS master playlist — used for the in-browser live preview
+    # (hls.js handles ABR + the separate audio rendition automatically).
+    master_url: Optional[str] = None
 
 
 class ArteStreamFinder:
@@ -114,6 +117,7 @@ class ArteStreamFinder:
                 stream_type=stream_type,
                 quality="best",
                 audio_url=audio_url,
+                master_url=master,
             ))
 
         if not streams:
